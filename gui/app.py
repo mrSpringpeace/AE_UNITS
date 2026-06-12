@@ -179,7 +179,10 @@ class App(ctk.CTk):
             self.iconbitmap(str(ico))
 
     def _on_close(self):
-        cfg.save(self._s)
+        try:
+            cfg.save(self._s)
+        except OSError:
+            pass
         self.destroy()
 
 
