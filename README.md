@@ -1,4 +1,7 @@
-# AE_UNITS
+<h1>
+  <img src="icon.png" alt="" width="44" valign="middle">
+  AE_UNITS
+</h1>
 
 Desktop utility for aerospace engineers and designers. Replaces ad-hoc Google searches for unit conversions, atmospheric data, and FEM/CFD solver unit systems. Bilingual — CS / EN.
 
