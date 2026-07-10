@@ -50,6 +50,7 @@ STRINGS = {
     "isa_rsigma":   "1/√σ  (TAS/EAS)",
     "isa_delta":    "δ = p/p₀",
     "isa_theta":    "θ = T/T₀",
+    "isa_profile":     "Standard profile vs. altitude [km]",
     "isa_sound_speed": "Speed of sound",
     "isa_dyn_visc":    "Dynamic viscosity μ",
     "isa_kin_visc":    "Kinematic viscosity ν",

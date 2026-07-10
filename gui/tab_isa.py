@@ -5,7 +5,7 @@ from tkinter import ttk
 
 import customtkinter as ctk
 
-from core.isa import isa, isa_h, density_altitude
+from core.isa import isa, isa_h, density_altitude, H_MAX
 from core.formatting import fmt
 from core.units import FT, LB, PSI, SLUG, TLAK
 from core import i18n
@@ -45,15 +45,20 @@ ROWS = [
 ]
 
 
+# barvy krivek profilu (funguji v tmavem i svetlem rezimu)
+_PROFILE_COLORS = {"sigma": "#3b8ed0", "delta": "#2fa572", "theta": "#e8a33d"}
+
+
 class IsaTab(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(2, weight=1)
         self._row_ids = {}
+        self._cur_h = 0.0
 
         inp = ctk.CTkFrame(self)
-        inp.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        inp.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 10))
 
         self.lbl_alt = ctk.CTkLabel(inp, font=("Segoe UI", 14))
         self.lbl_alt.grid(row=0, column=0, padx=(12, 6), pady=12)
@@ -82,7 +87,8 @@ class IsaTab(ctk.CTkFrame):
         inp.grid_columnconfigure(6, weight=1)
 
         self.note_label = ctk.CTkLabel(self, text_color="gray60", anchor="w")
-        self.note_label.grid(row=1, column=0, sticky="ew", padx=4, pady=(0, 8))
+        self.note_label.grid(row=1, column=0, columnspan=2, sticky="ew",
+                             padx=4, pady=(0, 8))
 
         self.table = ttk.Treeview(
             self, columns=("qty", "val", "unit"), show="headings",
@@ -92,6 +98,11 @@ class IsaTab(ctk.CTkFrame):
         self.table.column("unit", width=140, stretch=True,  anchor="w")
         self.table.grid(row=2, column=0, sticky="nsew")
         self.table.bind("<Double-1>", self._copy_row)
+
+        self.canvas = tk.Canvas(self, width=380, highlightthickness=0,
+                                borderwidth=0)
+        self.canvas.grid(row=2, column=1, sticky="nsew", padx=(10, 0))
+        self.canvas.bind("<Configure>", lambda e: self._draw_profile())
 
         self._build_rows()
         self.apply_theme()
@@ -122,9 +133,77 @@ class IsaTab(ctk.CTkFrame):
         self.table.heading("unit", text=i18n.t("isa_col_unit"), anchor="w")
         for key, lbl_key, _ in ROWS:
             self.table.set(self._row_ids[key], "qty", i18n.t(lbl_key))
+        self._draw_profile()
 
     def apply_theme(self):
         theme.zebra(self.table)
+        self._draw_profile()
+
+    # ------------------------------------------------------------------
+    def _draw_profile(self):
+        """Standardni profil σ/δ/θ (0-32 km) na tk.Canvas, bez zavislosti."""
+        c = self.canvas
+        w, hp = c.winfo_width(), c.winfo_height()
+        if w < 80 or hp < 80:
+            return
+        p = theme.palette()
+        c.configure(bg=p["bg"])
+        c.delete("all")
+
+        top, bot, left, right = 34, 30, 40, 14
+        h_top = 32000.0 if (self._cur_h or 0) <= 30000 else H_MAX
+        x_max = 1.05
+
+        def xy(val, alt):
+            x = left + val / x_max * (w - left - right)
+            y = hp - bot - alt / h_top * (hp - top - bot)
+            return x, y
+
+        # mrizka + popisky os
+        step = 5000 if h_top <= 40000 else 10000
+        for alt in range(0, int(h_top) + 1, step):
+            x0, y = xy(0, alt)
+            x1, _ = xy(x_max, alt)
+            c.create_line(x0, y, x1, y, fill=p["bg_head"])
+            c.create_text(x0 - 5, y, text=f"{alt // 1000}", anchor="e",
+                          fill=p["fg_dim"], font=("Segoe UI", 9))
+        for v in (0.0, 0.25, 0.5, 0.75, 1.0):
+            x, y0 = xy(v, 0)
+            _, y1 = xy(v, h_top)
+            c.create_line(x, y0, x, y1, fill=p["bg_head"])
+            c.create_text(x, y0 + 5, text=f"{v:g}", anchor="n",
+                          fill=p["fg_dim"], font=("Segoe UI", 9))
+
+        # krivky standardni atmosfery
+        alts = list(range(0, int(min(h_top, H_MAX)), 1000))
+        alts.append(min(h_top, H_MAX))
+        pts = {"sigma": [], "delta": [], "theta": []}
+        for alt in alts:
+            r = isa_h(alt)
+            pts["sigma"] += xy(r.sigma, alt)
+            pts["delta"] += xy(r.delta, alt)
+            pts["theta"] += xy(r.theta, alt)
+        for key, coords in pts.items():
+            c.create_line(*coords, fill=_PROFILE_COLORS[key],
+                          width=2, smooth=True)
+
+        # titulek + legenda
+        c.create_text(left, 8, text=i18n.t("isa_profile"), anchor="nw",
+                      fill=p["fg"], font=("Segoe UI", 10, "bold"))
+        lx = left
+        for sym, key in (("σ", "sigma"), ("δ", "delta"), ("θ", "theta")):
+            t_id = c.create_text(lx, hp - 6, text=sym, anchor="sw",
+                                 fill=_PROFILE_COLORS[key],
+                                 font=("Segoe UI", 11, "bold"))
+            lx = c.bbox(t_id)[2] + 12
+
+        # znacka aktualni vysky
+        if self._cur_h is not None and 0 <= self._cur_h <= h_top:
+            x0, y = xy(0, self._cur_h)
+            x1, _ = xy(x_max, self._cur_h)
+            c.create_line(x0, y, x1, y, fill=p["fg"], dash=(4, 3))
+            c.create_text(x1, y - 3, text=f"{self._cur_h / 1000:.2f} km",
+                          anchor="se", fill=p["fg"], font=("Segoe UI", 9))
 
     def _copy_row(self, event):
         iid = self.table.identify_row(event.y)
@@ -182,8 +261,12 @@ class IsaTab(ctk.CTkFrame):
         for key, v in vals.items():
             self.table.set(self._row_ids[key], "val",
                            fmt(v) if v is not None else "—")
+        self._cur_h = r.h
+        self._draw_profile()
 
     def _clear(self, msg):
         self.status.configure(text=msg)
         for iid in self._row_ids.values():
             self.table.set(iid, "val", "")
+        self._cur_h = None
+        self._draw_profile()

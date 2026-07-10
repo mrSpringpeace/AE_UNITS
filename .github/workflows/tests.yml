@@ -30,3 +30,6 @@ jobs:
 
       - name: Run airspeed tests
         run: python tests/test_airspeed.py
+
+      - name: Run material database sanity checks
+        run: python tests/test_materials.py

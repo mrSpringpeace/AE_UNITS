@@ -53,6 +53,7 @@ US Standard Atmosphere 1976, 0–86 km.
 
 - Input: altitude in m / ft / km / FL — **geometric or pressure altitude** (toggle), optional ΔISA offset
 - Output: T, p, ρ, speed of sound (m/s + kt), dynamic and kinematic viscosity, σ, δ, θ, **1/√σ** (TAS↔EAS factor), geometric / geopotential / **density altitude**
+- Built-in **σ/δ/θ profile plot** with a marker at the current altitude (native canvas — no plotting library needed)
 
 ### Airspeed Calculator
 Compressible subsonic conversions tied to the ISA model:
@@ -62,9 +63,9 @@ Compressible subsonic conversions tied to the ISA model:
 - Honest about IAS: IAS = CAS + instrument/position error — the app says "IAS ≈ CAS" instead of pretending to know your calibration curve
 
 ### Materials Reference
-19 common aerospace materials with **SI and imperial side by side**, full-text search, and user-editable library:
+29 common aerospace materials with **SI and imperial side by side**, full-text search, and user-editable library:
 
-Al 2024-T3, 6061-T6, 7075-T6, 7050-T7451 · Mg AZ31B · Ti-6Al-4V, Ti Grade 2 · Steel 4130, 4340, 17-4PH, 304 · Inconel 718 · C/epoxy UD and fabric · E-glass/epoxy · Sitka spruce · Birch ply · Rohacell 51 IG
+Al 2024-T3, 2014-T6, 6061-T6, 6082-T6, 7075-T6/-T73, 7050-T7451, 5052-H32 · Mg AZ31B · Ti-6Al-4V, Ti-3Al-2.5V, Ti Grade 2 · Steel 4130, 4340, 300M, 17-4PH, 15-5PH, 304 · Inconel 718 · C/epoxy UD, fabric and quasi-isotropic · E-glass/epoxy · Kevlar 49/epoxy · Sitka spruce · Birch ply · Rohacell 51 IG · Divinycell H80 · Balsa
 
 Add your own materials — saved automatically to `user_materials.json`. Export/import JSON libraries to share with colleagues.
 
@@ -129,7 +130,8 @@ AE_UNITS/
 └── tests/
     ├── test_units.py      # 36 reference checks + roundtrip all units
     ├── test_isa.py        # validated against US 1976 tables
-    └── test_airspeed.py   # incl. M 0.80 / FL350 reference point
+    ├── test_airspeed.py   # incl. M 0.80 / FL350 reference point
+    └── test_materials.py  # database sanity checks
 ```
 
 ---
@@ -155,8 +157,8 @@ The test suite checks 36 known values from aerospace literature (Niu, Bruhn), ru
 - [x] Export table to CSV / clipboard
 - [x] Pressure-altitude input and density altitude in the ISA tab
 - [x] Unit search across categories
-- [ ] ISA atmosphere profile plot
-- [ ] More materials (further Al alloys, CFRP layups)
+- [x] ISA atmosphere profile plot (σ/δ/θ, native canvas)
+- [x] More materials (29 entries: further Al alloys, Ti, steels, composites, cores)
 
 ---
 

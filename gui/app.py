@@ -16,7 +16,7 @@ from gui.tab_airspeed import AirspeedTab
 from gui.tab_materials import MaterialsTab
 
 APP_TITLE = "AE_UNITS"
-VERSION = "0.40"
+VERSION = "0.41"
 
 
 class App(ctk.CTk):
