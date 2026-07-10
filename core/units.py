@@ -7,7 +7,7 @@ splnuje: hodnota_v_zakladni = hodnota * factor.
 Teplota je afinni - resi se dvojici funkci to_base / from_base.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, Optional
 import math
 
@@ -213,6 +213,14 @@ TEPLOTA = _cat("Teplota", "Temperature", "K", [
          to_base=lambda r: r * 5 / 9, from_base=lambda k: k * 9 / 5),
 ])
 
+# --- Rozdil teplot (linearni, bez offsetu!) ---------------------------------
+ROZDIL_TEPLOT = _cat("Rozdíl teplot (ΔT)", "Temperature Difference (ΔT)", "K", [
+    Unit("K",  "kelvin (rozdíl)",                  "kelvin (difference)"),
+    Unit("°C", "stupeň Celsia (rozdíl)",           "degree Celsius (difference)", 1.0),
+    Unit("°F", "stupeň Fahrenheita (rozdíl)",      "degree Fahrenheit (difference)", 5 / 9),
+    Unit("°R", "stupeň Rankina (rozdíl)",          "degree Rankine (difference)",    5 / 9),
+])
+
 # --- Kvadraticky moment prurezu ---------------------------------------------
 KVADR_MOMENT = _cat("Kvadr. moment průřezu (I)", "Second Moment of Area (I)", "m⁴", [
     Unit("m⁴",  "metr na čtvrtou",                 "meter to the fourth"),
@@ -254,6 +262,15 @@ TUHOST = _cat("Tuhost (lineární)", "Linear Stiffness", "N/m", [
     Unit("kN/mm",  "kilonewton na milimetr",        "kilonewton per millimeter", 1e6),
     Unit("lbf/in", "libra-síla na palec",           "pound-force per inch",  LBF / IN),
     Unit("lbf/ft", "libra-síla na stopu",           "pound-force per foot",  LBF / FT),
+])
+
+# --- Liniove zatizeni / smykovy tok -----------------------------------------
+LINIOVE_ZATIZENI = _cat("Liniové zatížení / shear flow", "Running Load / Shear Flow", "N/m", [
+    Unit("N/m",    "newton na metr",               "newton per meter"),
+    Unit("N/mm",   "newton na milimetr (smyk. tok q)", "newton per millimeter (shear flow q)", 1e3),
+    Unit("kN/m",   "kilonewton na metr",           "kilonewton per meter",  1e3),
+    Unit("lbf/in", "libra-síla na palec",          "pound-force per inch",  LBF / IN),
+    Unit("lbf/ft", "libra-síla na stopu",          "pound-force per foot",  LBF / FT),
 ])
 
 # --- Hmotnostni moment setrvacnosti ----------------------------------------
@@ -298,6 +315,39 @@ VISK_KIN = _cat("Viskozita kinematická (ν)", "Kinematic Viscosity (ν)", "m²/
     Unit("St",    "stokes",                         "stokes",              1e-4),
     Unit("cSt",   "centistokes",                    "centistokes",         1e-6),
     Unit("ft²/s", "stopa čtvereční za sekundu",     "square foot per second", FT**2),
+])
+
+
+# --- Hmotnostni prutok -------------------------------------------------------
+HMOT_PRUTOK = _cat("Hmotnostní průtok", "Mass Flow Rate", "kg/s", [
+    Unit("kg/s",   "kilogram za sekundu",           "kilogram per second"),
+    Unit("g/s",    "gram za sekundu",               "gram per second",     1e-3),
+    Unit("kg/min", "kilogram za minutu",            "kilogram per minute", 1 / 60),
+    Unit("kg/h",   "kilogram za hodinu",            "kilogram per hour",   1 / 3600),
+    Unit("lb/s",   "libra za sekundu",              "pound per second",    LB),
+    Unit("lb/min", "libra za minutu",               "pound per minute",    LB / 60),
+    Unit("lb/h",   "libra za hodinu",               "pound per hour",      LB / 3600),
+])
+
+# --- Merna spotreba tahova (TSFC, proudove motory) ---------------------------
+SFC_TAH = _cat("Měrná spotřeba — tah (TSFC)", "Thrust SFC (TSFC)", "g/(kN·s)", [
+    Unit("g/(kN·s)",   "gram na kilonewton a sekundu", "gram per kilonewton second"),
+    Unit("mg/(N·s)",   "miligram na newton a sekundu", "milligram per newton second", 1.0),
+    Unit("kg/(kN·h)",  "kilogram na kilonewton a hodinu", "kilogram per kilonewton hour", 1e3 / 3600),
+    Unit("lb/(lbf·h)", "libra na libru-sílu a hodinu", "pound per pound-force hour",
+         factor=1e6 * LB / (LBF * 3600)),
+    Unit("kg/(kgf·h)", "kilogram na kilopond a hodinu", "kilogram per kilogram-force hour",
+         factor=1e6 / (G0 * 3600)),
+])
+
+# --- Merna spotreba vykonova (BSFC, pistove motory) ---------------------------
+SFC_VYKON = _cat("Měrná spotřeba — výkon (BSFC)", "Power SFC (BSFC)", "g/(kW·h)", [
+    Unit("g/(kW·h)",  "gram na kilowatthodinu",       "gram per kilowatt hour"),
+    Unit("kg/(kW·h)", "kilogram na kilowatthodinu",   "kilogram per kilowatt hour", 1e3),
+    Unit("lb/(hp·h)", "libra na horsepower a hodinu", "pound per horsepower hour",
+         factor=1e6 * LB / (550 * LBF * FT)),
+    Unit("g/(PS·h)",  "gram na koně (metr.) a hodinu", "gram per metric horsepower hour",
+         factor=1e3 / (75 * G0)),
 ])
 
 

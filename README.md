@@ -17,9 +17,9 @@ Desktop utility for aerospace engineers and designers. Replaces ad-hoc Google se
 ## Features
 
 ### Unit Converter
-21 categories, ~120 units — SI and imperial, covering the units found in Niu and Bruhn literature.
+28 categories, ~145 units — SI and imperial, covering the units found in Niu and Bruhn literature.
 
-Live recalculation as you type. Entire table of all units updated at once — one glance answers "100 KTAS = ? m/s = ? km/h = ? ft/s". Double-click any table row to copy the value.
+Live recalculation as you type. Entire table of all units updated at once — one glance answers "100 KTAS = ? m/s = ? km/h = ? ft/s". Double-click any table row to copy the value. Type a unit into the search box (e.g. `psi`) to jump straight to its category.
 
 | Category | Notable units |
 |---|---|
@@ -32,7 +32,10 @@ Live recalculation as you type. Entire table of all units updated at once — on
 | Second Moment of Area | m⁴, mm⁴, in⁴ |
 | Fracture Toughness | MPa·√m, ksi·√in |
 | Areal Weight | kg/m², g/m², oz/yd² (fabric) |
-| Temperature | K, °C, °F, °R |
+| Temperature | K, °C, °F, °R — plus a separate ΔT category (no offset!) |
+| Running Load / Shear Flow | N/mm, kN/m, lbf/in, lbf/ft |
+| Mass Flow | kg/s, kg/h, lb/min, lb/h |
+| SFC | TSFC g/(kN·s), lb/(lbf·h) · BSFC g/(kW·h), lb/(hp·h) |
 | … and more | moment, energy, power, viscosity, spring stiffness, angular velocity… |
 
 ### Solver Unit Systems
@@ -46,10 +49,17 @@ Pick a solver → see consistent unit system combinations with reference materia
 Each table includes reference material properties (steel, aluminium) in every unit system.
 
 ### ISA Atmosphere
-US Standard Atmosphere 1976, 0–86 km geometric altitude.
+US Standard Atmosphere 1976, 0–86 km.
 
-- Input: altitude in m / ft / km / FL, optional ΔISA offset
-- Output: T, p, ρ, speed of sound (m/s + kt), dynamic and kinematic viscosity, σ, δ, θ, **1/√σ** (TAS↔EAS conversion factor)
+- Input: altitude in m / ft / km / FL — **geometric or pressure altitude** (toggle), optional ΔISA offset
+- Output: T, p, ρ, speed of sound (m/s + kt), dynamic and kinematic viscosity, σ, δ, θ, **1/√σ** (TAS↔EAS factor), geometric / geopotential / **density altitude**
+
+### Airspeed Calculator
+Compressible subsonic conversions tied to the ISA model:
+
+- Input: altitude (pressure or geometric) + ΔISA + speed as **CAS / EAS / TAS / Mach** in kt, km/h, m/s, mph, ft/s
+- Output: all four speed definitions side by side, dynamic pressure **q = ½ρV²** (Pa + psf), impact pressure q_c, speed of sound, 1/√σ
+- Honest about IAS: IAS = CAS + instrument/position error — the app says "IAS ≈ CAS" instead of pretending to know your calibration curve
 
 ### Materials Reference
 19 common aerospace materials with **SI and imperial side by side**, full-text search, and user-editable library:
@@ -57,6 +67,9 @@ US Standard Atmosphere 1976, 0–86 km geometric altitude.
 Al 2024-T3, 6061-T6, 7075-T6, 7050-T7451 · Mg AZ31B · Ti-6Al-4V, Ti Grade 2 · Steel 4130, 4340, 17-4PH, 304 · Inconel 718 · C/epoxy UD and fabric · E-glass/epoxy · Sitka spruce · Birch ply · Rohacell 51 IG
 
 Add your own materials — saved automatically to `user_materials.json`. Export/import JSON libraries to share with colleagues.
+
+### Table export
+Any table (converter, solver systems, ISA, airspeed, materials) can be copied to the clipboard as TSV (pastes straight into Excel) or saved as CSV — two toolbar buttons, always acting on the active tab.
 
 > ⚠️ Indicative typical values only. For structural substantiation use MMPDS / CMH-17 or the material data sheet.
 
@@ -89,7 +102,8 @@ AE_UNITS/
 ├── main.py
 ├── core/
 │   ├── units.py           # unit definitions and conversion engine
-│   ├── isa.py             # ISA 1976 atmosphere model
+│   ├── isa.py             # ISA 1976 model + pressure/density altitude inversion
+│   ├── airspeed.py        # CAS/EAS/TAS/Mach compressible conversions
 │   ├── formatting.py      # global number format state
 │   ├── i18n.py            # localization engine (CS / EN)
 │   ├── settings.py        # persistent user settings (settings.json)
@@ -101,18 +115,21 @@ AE_UNITS/
 │   ├── cs.py              # Czech UI strings
 │   └── en.py              # English UI strings + quantity map
 ├── gui/
-│   ├── app.py             # main window, toolbar (format, theme, language)
+│   ├── app.py             # main window, toolbar (format, theme, language, export)
 │   ├── theme.py           # dark/light palette for native Tk widgets
+│   ├── export.py          # table → CSV / clipboard
 │   ├── tab_converter.py
 │   ├── tab_solvers.py
 │   ├── tab_isa.py
+│   ├── tab_airspeed.py
 │   ├── tab_materials.py
 │   └── dialog_material.py
 ├── docs/
 │   └── screenshot.png
 └── tests/
-    ├── test_units.py      # 26 reference checks + roundtrip all units
-    └── test_isa.py        # validated against US 1976 tables
+    ├── test_units.py      # 36 reference checks + roundtrip all units
+    ├── test_isa.py        # validated against US 1976 tables
+    └── test_airspeed.py   # incl. M 0.80 / FL350 reference point
 ```
 
 ---
@@ -128,16 +145,18 @@ All conversion factors are exact SI / NIST 2019 values where defined:
 | 1 lbf | = 4.4482216152605 N (exact) |
 | g₀ | = 9.80665 m/s² (exact) |
 
-The test suite checks 26 known values from aerospace literature (Niu, Bruhn) and runs a roundtrip test across all units in all categories.
+The test suite checks 36 known values from aerospace literature (Niu, Bruhn), runs a roundtrip test across all units in all categories, and validates the airspeed calculator against the classic M 0.80 / FL350 ≈ 272 KCAS reference point.
 
 ---
 
 ## Roadmap
 
-- [ ] Dynamic pressure calculator (q = ½ρV²) from ISA + airspeed
+- [x] Dynamic pressure calculator (q = ½ρV²) from ISA + airspeed → **Airspeed tab**
+- [x] Export table to CSV / clipboard
+- [x] Pressure-altitude input and density altitude in the ISA tab
+- [x] Unit search across categories
 - [ ] ISA atmosphere profile plot
 - [ ] More materials (further Al alloys, CFRP layups)
-- [ ] Export table to CSV
 
 ---
 

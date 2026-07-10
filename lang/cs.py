@@ -5,6 +5,7 @@ STRINGS = {
     "tab_converter": "Převodník",
     "tab_solvers":   "Solver systémy",
     "tab_isa":       "ISA atmosféra",
+    "tab_airspeed":  "Rychlosti letu",
     "tab_materials": "Materiály",
     # toolbar
     "fmt_label":   "Formát čísel:",
@@ -14,7 +15,12 @@ STRINGS = {
     "fmt_auto":  "Auto",
     "fmt_sci":   "Vědecký (1.23e+05)",
     "fmt_fixed": "Pevný (123456.79)",
+    "btn_copy_table":   "⧉ Kopírovat tabulku",
+    "btn_export_csv":   "💾 Export CSV",
+    "export_csv_title": "Uložit tabulku jako CSV",
+    "exported_msg":     "Uloženo: {path}",
     # prevednik
+    "search_unit_ph": "Hledat jednotku (psi, uzel…)",
     "col_unit":  "Jednotka",
     "col_value": "Hodnota  (dvojklik = kopírovat)",
     "col_desc":  "Popis",
@@ -31,7 +37,11 @@ STRINGS = {
     "isa_col_unit": "Jednotka",
     "isa_geom_alt": "z = {v} m geometrické",
     "isa_invalid":  "Neplatný vstup",
-    "isa_geopotential_h":   "Geopotenciální výška",
+    "alt_type_geom":  "geometrická",
+    "alt_type_press": "tlaková (FL)",
+    "isa_geometric_z":      "Geometrická výška",
+    "isa_geopotential_h":   "Geopotenciální (tlaková) výška",
+    "isa_density_alt":      "Hustotní výška (density altitude)",
     "isa_temperature":      "Teplota",
     "isa_temperature_isa":  "Teplota ISA (bez ΔISA)",
     "isa_pressure":         "Tlak",
@@ -43,6 +53,18 @@ STRINGS = {
     "isa_sound_speed": "Rychlost zvuku",
     "isa_dyn_visc":    "Dynamická viskozita μ",
     "isa_kin_visc":    "Kinematická viskozita ν",
+    # rychlosti letu
+    "lbl_speed": "Rychlost:",
+    "as_note": ("Kompresibilní přepočet (platnost M ≤ 1). IAS = CAS + přístrojová/"
+                "polohová chyba — bez kalibrační křivky letounu počítejte IAS ≈ CAS. "
+                "Dvojklik na řádek = kopírovat hodnotu."),
+    "as_mach": "Machovo číslo M",
+    "as_tas":  "TAS — skutečná rychlost",
+    "as_eas":  "EAS — ekvivalentní rychlost",
+    "as_cas":  "CAS — kalibrovaná (≈ IAS)",
+    "as_q":    "Dynamický tlak q = ½ρV²",
+    "as_qc":   "Impaktní tlak q_c (pitot)",
+    "as_supersonic": "M > 1 — mimo subsonickou platnost modelu",
     # materialy
     "lbl_search":    "Hledat:",
     "btn_add_mat":   "+ Přidat materiál",

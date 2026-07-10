@@ -46,6 +46,27 @@ for _i, (_hb, _L) in enumerate(_LAYERS[:-1]):
         _p = _p * (_t / (_t + _L * _dh)) ** (G0 / (R * _L))
         _t = _t + _L * _dh
 
+H_MIN, H_MAX = -2000.0, 84852.0   # platnost modelu [m geopotencialne]
+_P_TOP = _p                        # tlak na hornim okraji modelu
+
+
+def _std_Tp(h: float) -> tuple:
+    """Standardni (T, p) v geopotencialni vysce h [m]. Bez kontroly rozsahu."""
+    base = _BASES[0]
+    for b in _BASES:
+        if h >= b[0]:
+            base = b
+        else:
+            break
+    h_b, T_b, p_b, L = base
+    if L == 0.0:
+        return T_b, p_b * math.exp(-G0 * (h - h_b) / (R * T_b))
+    T = T_b + L * (h - h_b)
+    return T, p_b * (T_b / T) ** (G0 / (R * L))
+
+
+P_MAX = _std_Tp(H_MIN)[1]          # tlak na dolnim okraji modelu (-2 km)
+
 
 @dataclass(frozen=True)
 class IsaResult:
@@ -66,25 +87,10 @@ class IsaResult:
 def isa(z_m: float, dT: float = 0.0) -> IsaResult:
     """Vypocet atmosfery v geometricke vysce z_m [m], dT = odchylka od ISA [K]."""
     h = R_EARTH * z_m / (R_EARTH + z_m)
-    if not (-2000.0 <= h <= 84852.0):
+    if not (H_MIN <= h <= H_MAX):
         raise ValueError("Vyska mimo rozsah modelu (-2 az 86 km)")
 
-    # najdi vrstvu (pod 0 m plati gradient prvni vrstvy)
-    base = _BASES[0]
-    for b in _BASES:
-        if h >= b[0]:
-            base = b
-        else:
-            break
-    h_b, T_b, p_b, L = base
-
-    if L == 0.0:
-        T_std = T_b
-        p = p_b * math.exp(-G0 * (h - h_b) / (R * T_b))
-    else:
-        T_std = T_b + L * (h - h_b)
-        p = p_b * (T_b / T_std) ** (G0 / (R * L))
-
+    T_std, p = _std_Tp(h)
     T = T_std + dT
     rho = p / (R * T)
     a = math.sqrt(GAMMA * R * T)
@@ -94,3 +100,52 @@ def isa(z_m: float, dT: float = 0.0) -> IsaResult:
     return IsaResult(z=z_m, h=h, T=T, T_isa=T_std, p=p, rho=rho, a=a,
                      mu=mu, nu=nu, sigma=rho / RHO0, delta=p / P0,
                      theta=T / T0)
+
+
+def isa_h(h_m: float, dT: float = 0.0) -> IsaResult:
+    """Vypocet ze zadane geopotencialni (= tlakove) vysky h_m [m].
+
+    Tlakova vyska (altimetr na 1013.25 hPa, FL) je ve standardni
+    atmosfere totozna s geopotencialni vyskou.
+    """
+    if not (H_MIN <= h_m <= H_MAX):
+        raise ValueError("Vyska mimo rozsah modelu (-2 az 86 km)")
+    return isa(R_EARTH * h_m / (R_EARTH - h_m), dT)
+
+
+def pressure_altitude(p: float) -> float:
+    """Tlakova (geopotencialni) vyska [m] pro tlak p [Pa] — inverze std. atmosfery."""
+    if not (_P_TOP <= p <= P_MAX):
+        raise ValueError("Tlak mimo rozsah modelu")
+    base = _BASES[0]
+    for b in _BASES:
+        if p <= b[2]:
+            base = b
+        else:
+            break
+    h_b, T_b, p_b, L = base
+    if L == 0.0:
+        return h_b - R * T_b / G0 * math.log(p / p_b)
+    T = T_b * (p_b / p) ** (R * L / G0)
+    return h_b + (T - T_b) / L
+
+
+def density_altitude(rho: float) -> float:
+    """Hustotni vyska [m geopot.] — vyska std. atmosfery se stejnou hustotou.
+
+    Hustota std. atmosfery monotonne klesa, staci bisekce.
+    """
+    def _std_rho(h):
+        T, p = _std_Tp(h)
+        return p / (R * T)
+
+    if not (_std_rho(H_MAX) <= rho <= _std_rho(H_MIN)):
+        raise ValueError("Hustota mimo rozsah modelu")
+    lo, hi = H_MIN, H_MAX
+    for _ in range(60):
+        mid = 0.5 * (lo + hi)
+        if _std_rho(mid) > rho:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)

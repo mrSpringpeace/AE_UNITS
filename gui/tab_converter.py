@@ -16,16 +16,25 @@ class ConverterTab(ctk.CTkFrame):
         super().__init__(master, fg_color="transparent")
         self.category = CATEGORIES[0]
         self._row_ids = []
+        self._visible = list(CATEGORIES)
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        # --- leva lista kategorii ---------------------------------------
+        # --- leva lista: hledani + kategorie ------------------------------
+        left = ctk.CTkFrame(self, fg_color="transparent")
+        left.grid(row=0, column=0, sticky="nsw", padx=(0, 12))
+        left.grid_rowconfigure(1, weight=1)
+
+        self.search_entry = ctk.CTkEntry(left, width=224)
+        self.search_entry.grid(row=0, column=0, sticky="ew", pady=(0, 6))
+        self.search_entry.bind("<KeyRelease>", lambda e: self._on_search())
+
         self.cat_list = tk.Listbox(
-            self, width=26, font=("Segoe UI", 12),
+            left, width=26, font=("Segoe UI", 12),
             activestyle="none", borderwidth=0, highlightthickness=0,
             exportselection=False)
-        self.cat_list.grid(row=0, column=0, sticky="nsw", padx=(0, 12))
+        self.cat_list.grid(row=1, column=0, sticky="nsw")
         self._fill_cat_list()
         self.cat_list.bind("<<ListboxSelect>>", self._on_category_click)
 
@@ -83,20 +92,48 @@ class ConverterTab(ctk.CTkFrame):
     # ------------------------------------------------------------------
     def refresh_lang(self):
         self.copy_btn.configure(text=i18n.t("btn_copy"))
+        self.search_entry.configure(placeholder_text=i18n.t("search_unit_ph"))
         self.table.heading("sym",  text=i18n.t("col_unit"),  anchor="w")
         self.table.heading("val",  text=i18n.t("col_value"), anchor="e")
         self.table.heading("name", text=i18n.t("col_desc"),  anchor="w")
-        self._fill_cat_list()
+        self._on_search()   # prefiltruje podle noveho jazyka a preplni seznam
         self._update_desc()
         self.refill_table()
 
     def _fill_cat_list(self):
-        sel = self.cat_list.curselection()
         self.cat_list.delete(0, "end")
-        for cat in CATEGORIES:
+        for cat in self._visible:
             self.cat_list.insert("end", f"  {i18n.cname(cat)}")
-        if sel:
-            self.cat_list.selection_set(sel[0])
+        if self.category in self._visible:
+            idx = self._visible.index(self.category)
+            self.cat_list.selection_clear(0, "end")
+            self.cat_list.selection_set(idx)
+            self.cat_list.see(idx)
+
+    @staticmethod
+    def _cat_matches(cat, needle: str) -> bool:
+        if needle in i18n.cname(cat).lower():
+            return True
+        return any(needle in u.symbol.lower() or needle in i18n.uname(u).lower()
+                   for u in cat.units)
+
+    def _on_search(self):
+        needle = self.search_entry.get().strip().lower()
+        if not needle:
+            self._visible = list(CATEGORIES)
+        else:
+            self._visible = [c for c in CATEGORIES
+                             if self._cat_matches(c, needle)]
+        if self._visible and self.category not in self._visible:
+            self.select_category(self._visible[0])
+        self._fill_cat_list()
+        # presna shoda symbolu -> rovnou nastav vychozi jednotku
+        if needle:
+            for u in self.category.units:
+                if u.symbol.lower() == needle:
+                    self.from_menu.set(u.symbol)
+                    self.recalc()
+                    break
 
     def apply_theme(self):
         theme.style_listbox(self.cat_list)
@@ -104,8 +141,8 @@ class ConverterTab(ctk.CTkFrame):
 
     def _on_category_click(self, _event):
         sel = self.cat_list.curselection()
-        if sel:
-            self.select_category(CATEGORIES[sel[0]])
+        if sel and sel[0] < len(self._visible):
+            self.select_category(self._visible[sel[0]])
 
     def select_category(self, cat):
         self.category = cat

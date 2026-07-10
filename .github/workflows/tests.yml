@@ -27,3 +27,6 @@ jobs:
 
       - name: Run ISA atmosphere tests
         run: python tests/test_isa.py
+
+      - name: Run airspeed tests
+        run: python tests/test_airspeed.py

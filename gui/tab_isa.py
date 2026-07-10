@@ -5,18 +5,24 @@ from tkinter import ttk
 
 import customtkinter as ctk
 
-from core.isa import isa
+from core.isa import isa, isa_h, density_altitude
 from core.formatting import fmt
-from core.units import FT
+from core.units import FT, LB, PSI, SLUG, TLAK
 from core import i18n
 from gui import theme
 
 ALT_UNITS = {"m": 1.0, "ft": FT, "km": 1000.0, "FL": 100 * FT}
+_INHG = TLAK.unit("inHg").factor
+_KT = 1852.0 / 3600.0
 
 # (klic, i18n klic popisku, jednotka)
 ROWS = [
+    ("z",      "isa_geometric_z",     "m"),
+    ("z_ft",   "isa_geometric_z",     "ft"),
     ("h",      "isa_geopotential_h",  "m"),
     ("h_ft",   "isa_geopotential_h",  "ft"),
+    ("h_rho",    "isa_density_alt",   "m"),
+    ("h_rho_ft", "isa_density_alt",   "ft"),
     ("T",      "isa_temperature",     "K"),
     ("T_C",    "isa_temperature",     "°C"),
     ("T_isa",  "isa_temperature_isa", "K"),
@@ -60,16 +66,20 @@ class IsaTab(ctk.CTkFrame):
                                           command=lambda _: self.recalc())
         self.alt_unit.grid(row=0, column=2, padx=6, pady=12)
 
+        self._alt_mode = "geom"   # "geom" | "press"
+        self.alt_type = ctk.CTkSegmentedButton(inp, command=self._on_alt_type)
+        self.alt_type.grid(row=0, column=3, padx=(12, 6), pady=12)
+
         self.lbl_dt = ctk.CTkLabel(inp, font=("Segoe UI", 14))
-        self.lbl_dt.grid(row=0, column=3, padx=(24, 6), pady=12)
+        self.lbl_dt.grid(row=0, column=4, padx=(24, 6), pady=12)
         self.dt_entry = ctk.CTkEntry(inp, width=80, font=("Consolas", 18), justify="right")
-        self.dt_entry.grid(row=0, column=4, padx=6, pady=12)
+        self.dt_entry.grid(row=0, column=5, padx=6, pady=12)
         self.dt_entry.insert(0, "0")
         self.dt_entry.bind("<KeyRelease>", lambda e: self.recalc())
 
         self.status = ctk.CTkLabel(inp, text="", text_color="gray60", anchor="w")
-        self.status.grid(row=0, column=5, padx=(24, 12), pady=12, sticky="ew")
-        inp.grid_columnconfigure(5, weight=1)
+        self.status.grid(row=0, column=6, padx=(24, 12), pady=12, sticky="ew")
+        inp.grid_columnconfigure(6, weight=1)
 
         self.note_label = ctk.CTkLabel(self, text_color="gray60", anchor="w")
         self.note_label.grid(row=1, column=0, sticky="ew", padx=4, pady=(0, 8))
@@ -96,9 +106,16 @@ class IsaTab(ctk.CTkFrame):
                                     tags=(tag,))
             self._row_ids[key] = iid
 
+    def _on_alt_type(self, value):
+        self._alt_mode = "geom" if value == i18n.t("alt_type_geom") else "press"
+        self.recalc()
+
     def refresh_lang(self):
         self.lbl_alt.configure(text=i18n.t("lbl_altitude"))
         self.lbl_dt.configure(text=i18n.t("lbl_delta_isa"))
+        geom_lbl, press_lbl = i18n.t("alt_type_geom"), i18n.t("alt_type_press")
+        self.alt_type.configure(values=[geom_lbl, press_lbl])
+        self.alt_type.set(geom_lbl if self._alt_mode == "geom" else press_lbl)
         self.note_label.configure(text=i18n.t("isa_model_note"))
         self.table.heading("qty",  text=i18n.t("isa_col_qty"),  anchor="w")
         self.table.heading("val",  text=i18n.t("isa_col_val"),  anchor="e")
@@ -135,28 +152,36 @@ class IsaTab(ctk.CTkFrame):
         if alt is None or dt is None:
             self._clear(i18n.t("isa_invalid"))
             return
-        z = alt * ALT_UNITS[self.alt_unit.get()]
+        x = alt * ALT_UNITS[self.alt_unit.get()]
         try:
-            r = isa(z, dT=dt)
+            r = isa(x, dT=dt) if self._alt_mode == "geom" else isa_h(x, dT=dt)
         except ValueError as e:
             self._clear(str(e))
             return
-        self.status.configure(text=i18n.t("isa_geom_alt", v=fmt(z)))
+        try:
+            h_rho = density_altitude(r.rho)
+        except ValueError:
+            h_rho = None
+        self.status.configure(text=i18n.t("isa_geom_alt", v=fmt(r.z)))
         vals = {
+            "z": r.z, "z_ft": r.z / FT,
             "h": r.h, "h_ft": r.h / FT,
+            "h_rho":    h_rho,
+            "h_rho_ft": h_rho / FT if h_rho is not None else None,
             "T": r.T, "T_C": r.T - 273.15, "T_isa": r.T_isa,
             "p": r.p, "p_hpa": r.p / 100,
-            "p_psi":  r.p / 6894.757293168361,
-            "p_inhg": r.p / 3386.388640341,
-            "rho": r.rho, "rho_sl": r.rho / 515.3788183931961,
-            "rho_lb": r.rho / 16.018463373960138,
+            "p_psi":  r.p / PSI,
+            "p_inhg": r.p / _INHG,
+            "rho": r.rho, "rho_sl": r.rho / (SLUG / FT**3),
+            "rho_lb": r.rho / (LB / FT**3),
             "sigma": r.sigma, "rsigma": r.sigma ** -0.5,
             "delta": r.delta, "theta": r.theta,
-            "a": r.a, "a_kt": r.a / (1852 / 3600), "a_kmh": r.a * 3.6,
+            "a": r.a, "a_kt": r.a / _KT, "a_kmh": r.a * 3.6,
             "mu": r.mu, "nu": r.nu,
         }
         for key, v in vals.items():
-            self.table.set(self._row_ids[key], "val", fmt(v))
+            self.table.set(self._row_ids[key], "val",
+                           fmt(v) if v is not None else "—")
 
     def _clear(self, msg):
         self.status.configure(text=msg)

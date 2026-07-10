@@ -5,6 +5,7 @@ STRINGS = {
     "tab_converter": "Converter",
     "tab_solvers":   "Solver Systems",
     "tab_isa":       "ISA Atmosphere",
+    "tab_airspeed":  "Airspeed",
     "tab_materials": "Materials",
     # toolbar
     "fmt_label":    "Number format:",
@@ -14,7 +15,12 @@ STRINGS = {
     "fmt_auto":  "Auto",
     "fmt_sci":   "Scientific (1.23e+05)",
     "fmt_fixed": "Fixed (123456.79)",
+    "btn_copy_table":   "⧉ Copy table",
+    "btn_export_csv":   "💾 Export CSV",
+    "export_csv_title": "Save table as CSV",
+    "exported_msg":     "Saved: {path}",
     # converter
+    "search_unit_ph": "Find unit (psi, knot…)",
     "col_unit":  "Unit",
     "col_value": "Value  (double-click = copy)",
     "col_desc":  "Description",
@@ -31,7 +37,11 @@ STRINGS = {
     "isa_col_unit": "Unit",
     "isa_geom_alt": "z = {v} m geometric",
     "isa_invalid":  "Invalid input",
-    "isa_geopotential_h":  "Geopotential altitude",
+    "alt_type_geom":  "geometric",
+    "alt_type_press": "pressure (FL)",
+    "isa_geometric_z":     "Geometric altitude",
+    "isa_geopotential_h":  "Geopotential (pressure) altitude",
+    "isa_density_alt":     "Density altitude",
     "isa_temperature":     "Temperature",
     "isa_temperature_isa": "ISA temperature (excl. ΔISA)",
     "isa_pressure":        "Pressure",
@@ -43,6 +53,18 @@ STRINGS = {
     "isa_sound_speed": "Speed of sound",
     "isa_dyn_visc":    "Dynamic viscosity μ",
     "isa_kin_visc":    "Kinematic viscosity ν",
+    # airspeed
+    "lbl_speed": "Speed:",
+    "as_note": ("Compressible conversion (valid for M ≤ 1). IAS = CAS + instrument/"
+                "position error — without the aircraft calibration curve assume "
+                "IAS ≈ CAS. Double-click a row to copy the value."),
+    "as_mach": "Mach number M",
+    "as_tas":  "TAS — true airspeed",
+    "as_eas":  "EAS — equivalent airspeed",
+    "as_cas":  "CAS — calibrated (≈ IAS)",
+    "as_q":    "Dynamic pressure q = ½ρV²",
+    "as_qc":   "Impact pressure q_c (pitot)",
+    "as_supersonic": "M > 1 — beyond subsonic validity of the model",
     # materials
     "lbl_search":    "Search:",
     "btn_add_mat":   "+ Add material",

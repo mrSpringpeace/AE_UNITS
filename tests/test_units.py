@@ -8,7 +8,8 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from core.units import (CATEGORIES, convert, DELKA, RYCHLOST, TLAK, SILA,
                         HUSTOTA, TEPLOTA, VYKON, LOMOVA, HMOTNOST,
-                        PLOSNA_HMOTNOST, ZRYCHLENI)
+                        PLOSNA_HMOTNOST, ZRYCHLENI, ROZDIL_TEPLOT,
+                        LINIOVE_ZATIZENI, HMOT_PRUTOK, SFC_TAH, SFC_VYKON)
 
 CHECKS = [
     # (kategorie, hodnota, z, do, ocekavani, tolerance_rel)
@@ -38,6 +39,22 @@ CHECKS = [
     (LOMOVA, 1, "MPa·√m", "N/mm^3/2", 31.6227766, 1e-9),
     (PLOSNA_HMOTNOST, 1, "oz/yd²", "g/m²", 33.9057, 1e-5),
     (ZRYCHLENI, 1, "g", "ft/s²", 32.17405, 1e-6),
+    # rozdil teplot (linearni, bez offsetu)
+    (ROZDIL_TEPLOT, 18, "°F", "K", 10.0, 1e-12),
+    (ROZDIL_TEPLOT, 10, "°C", "°F", 18.0, 1e-12),
+    # liniove zatizeni / shear flow
+    (LINIOVE_ZATIZENI, 1, "lbf/in", "N/mm", 0.175126835, 1e-8),
+    (LINIOVE_ZATIZENI, 1, "kN/m", "lbf/ft", 68.5218, 1e-5),
+    # hmotnostni prutok
+    (HMOT_PRUTOK, 1, "lb/h", "kg/s", 1.259979e-4, 1e-6),
+    (HMOT_PRUTOK, 1, "kg/h", "lb/min", 0.03674371, 1e-6),
+    # SFC: znama hodnota 1 lb/(lbf·h) = 28.3255 g/(kN·s); kg/(kgf·h) je totez
+    (SFC_TAH, 1, "lb/(lbf·h)", "g/(kN·s)", 28.32545, 1e-6),
+    # kg/(kgf·h) = lb/(lbf·h) exaktne (LBF = LB*G0)
+    (SFC_TAH, 1, "kg/(kgf·h)", "lb/(lbf·h)", 1.0, 1e-12),
+    # BSFC: 1 lb/(hp·h) = 608.277 g/(kW·h)
+    (SFC_VYKON, 1, "lb/(hp·h)", "g/(kW·h)", 608.2774, 1e-6),
+    (SFC_VYKON, 250, "g/(kW·h)", "lb/(hp·h)", 0.4110, 2e-4),
 ]
 
 

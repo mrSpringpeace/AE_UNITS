@@ -6,7 +6,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-from core.isa import isa
+from core.isa import isa, isa_h, pressure_altitude, density_altitude
 
 # (z [m], T [K], p [Pa], rho [kg/m3]) - tabulkove hodnoty US 1976
 TABLE = [
@@ -57,6 +57,34 @@ def main():
     rt = isa(11019)  # 11 km geopotencialni ~ 11019 m geometricke
     if abs(rt.T_isa - 216.65) > 0.01:
         print(f"FAIL tropopauza: T={rt.T_isa}")
+        failed += 1
+
+    # isa_h: zadana geopotencialni vyska se musi vratit beze zmeny
+    for h in (0, 5000, 11000, 25000, 50000, 80000):
+        rr = isa_h(h)
+        if abs(rr.h - h) > 1e-6:
+            print(f"FAIL isa_h: h={h} -> {rr.h}")
+            failed += 1
+        # roundtrip inverze: tlak -> tlakova vyska
+        if abs(pressure_altitude(rr.p) - h) > 0.01:
+            print(f"FAIL pressure_altitude roundtrip: h={h} "
+                  f"-> {pressure_altitude(rr.p):.3f}")
+            failed += 1
+        # roundtrip inverze: hustota -> hustotni vyska (dT=0 => h)
+        if abs(density_altitude(rr.rho) - h) > 0.5:
+            print(f"FAIL density_altitude roundtrip: h={h} "
+                  f"-> {density_altitude(rr.rho):.3f}")
+            failed += 1
+
+    # znama kontrola: hladina more, ISA+15 => density altitude ~526 m (~1725 ft)
+    da = density_altitude(isa(0, dT=15).rho)
+    if not (520 < da < 532):
+        print(f"FAIL density altitude ISA+15: {da:.1f} m (ocekavano ~526)")
+        failed += 1
+
+    # tlakova vyska: standardni tlak na hladine more => 0 m
+    if abs(pressure_altitude(101325.0)) > 1e-6:
+        print(f"FAIL pressure_altitude(101325) = {pressure_altitude(101325.0)}")
         failed += 1
 
     print("VSE OK (ISA)" if failed == 0 else f"{failed} CHYB (ISA)")

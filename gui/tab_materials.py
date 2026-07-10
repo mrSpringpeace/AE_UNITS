@@ -176,12 +176,7 @@ class MaterialsTab(ctk.CTkFrame):
                                    i18n.t("mat_load_empty_msg"))
             return
         existing = {m[0] for m in self._user_mats}
-        added = sum(1 for m in imported if m[0] not in existing
-                    or not existing.add(m[0])  # side effect: add to set
-                    for _ in [self._user_mats.append(m)] if m[0] in existing)
-        # clean re-implementation without side-effect abuse:
-        existing2 = {m[0] for m in self._user_mats}
-        new = [m for m in imported if m[0] not in existing2]
+        new = [m for m in imported if m[0] not in existing]
         self._user_mats.extend(new)
         um.save(self._user_mats)
         self.refill()
