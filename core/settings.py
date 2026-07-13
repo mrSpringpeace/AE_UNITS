@@ -1,13 +1,10 @@
 """Perzistence uzivatelskych nastaveni."""
 
 import json
-import sys
-from pathlib import Path
 
-if getattr(sys, "frozen", False):
-    _PATH = Path(sys.executable).parent / "settings.json"
-else:
-    _PATH = Path(__file__).parent.parent / "settings.json"
+from core import paths
+
+_PATH = paths.writable_dir() / "settings.json"
 
 _DEFAULTS = {
     "theme":      "Tmavý",

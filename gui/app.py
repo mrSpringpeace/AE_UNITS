@@ -1,12 +1,10 @@
 """AE_UNITS - hlavni okno aplikace."""
 
-import sys
-from pathlib import Path
 from tkinter import messagebox
 
 import customtkinter as ctk
 
-from core import formatting, i18n
+from core import formatting, i18n, paths
 from core import settings as cfg
 from gui import theme, export
 from gui.tab_converter import ConverterTab
@@ -223,11 +221,7 @@ class App(ctk.CTk):
         return i18n.t(key)
 
     def _set_icon(self):
-        if getattr(sys, "frozen", False):
-            base = Path(sys._MEIPASS)
-        else:
-            base = Path(__file__).parent.parent
-        ico = base / "icon.ico"
+        ico = paths.resource_dir() / "icon.ico"
         if ico.exists():
             self.iconbitmap(str(ico))
 

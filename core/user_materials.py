@@ -9,15 +9,11 @@ Format zaznamu je shodny s data/materials.py:
 """
 
 import json
-import sys
 from pathlib import Path
 
-if getattr(sys, "frozen", False):
-    _DIR = Path(sys.executable).parent
-else:
-    _DIR = Path(__file__).parent.parent
+from core import paths
 
-_DEFAULT_PATH = _DIR / "user_materials.json"
+_DEFAULT_PATH = paths.writable_dir() / "user_materials.json"
 
 
 def _parse(raw: list) -> tuple:
