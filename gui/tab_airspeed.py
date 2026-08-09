@@ -50,7 +50,7 @@ class AirspeedTab(ctk.CTkFrame):
         inp.grid(row=0, column=0, sticky="ew", pady=(0, 10))
 
         # --- radek 0: vyska + dISA --------------------------------------
-        self.lbl_alt = ctk.CTkLabel(inp, font=("Segoe UI", 14))
+        self.lbl_alt = ctk.CTkLabel(inp, font=theme.ui_font(14))
         self.lbl_alt.grid(row=0, column=0, padx=(12, 6), pady=(12, 4))
         self.alt_entry = ctk.CTkEntry(inp, width=140, font=("Consolas", 18), justify="right")
         self.alt_entry.grid(row=0, column=1, padx=6, pady=(12, 4))
@@ -65,7 +65,7 @@ class AirspeedTab(ctk.CTkFrame):
         self.alt_type = ctk.CTkSegmentedButton(inp, command=self._on_alt_type)
         self.alt_type.grid(row=0, column=3, padx=(12, 6), pady=(12, 4))
 
-        self.lbl_dt = ctk.CTkLabel(inp, font=("Segoe UI", 14))
+        self.lbl_dt = ctk.CTkLabel(inp, font=theme.ui_font(14))
         self.lbl_dt.grid(row=0, column=4, padx=(24, 6), pady=(12, 4))
         self.dt_entry = ctk.CTkEntry(inp, width=80, font=("Consolas", 18), justify="right")
         self.dt_entry.grid(row=0, column=5, padx=6, pady=(12, 4))
@@ -73,7 +73,7 @@ class AirspeedTab(ctk.CTkFrame):
         self.dt_entry.bind("<KeyRelease>", lambda e: self.recalc())
 
         # --- radek 1: rychlost -------------------------------------------
-        self.lbl_speed = ctk.CTkLabel(inp, font=("Segoe UI", 14))
+        self.lbl_speed = ctk.CTkLabel(inp, font=theme.ui_font(14))
         self.lbl_speed.grid(row=1, column=0, padx=(12, 6), pady=(4, 12))
         self.speed_entry = ctk.CTkEntry(inp, width=140, font=("Consolas", 18), justify="right")
         self.speed_entry.grid(row=1, column=1, padx=6, pady=(4, 12))
@@ -184,14 +184,14 @@ class AirspeedTab(ctk.CTkFrame):
         try:
             atm = isa(x, dT=dt) if self._alt_mode == "geom" else isa_h(x, dT=dt)
         except ValueError as e:
-            self._clear(str(e))
+            self._clear(i18n.err(e))
             return
         kind = self.kind_menu.get()
         value = spd if kind == "Mach" else spd * SPEED_UNITS[self.speed_unit.get()]
         try:
             r = speeds(atm, value, kind)
-        except ValueError:
-            self._clear(i18n.t("as_supersonic"))
+        except ValueError as e:
+            self._clear(i18n.err(e))
             return
         self.status.configure(text="")
         vals = {

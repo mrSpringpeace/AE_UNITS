@@ -18,12 +18,12 @@ class SolversTab(ctk.CTkFrame):
 
         self.selector = ctk.CTkSegmentedButton(
             self, values=list(SOLVERS.keys()), command=self.select_solver,
-            font=("Segoe UI", 14))
+            font=theme.ui_font(14))
         self.selector.grid(row=0, column=0, sticky="w", pady=(0, 10))
 
         self.note_label = ctk.CTkLabel(
             self, text="", anchor="w", justify="left", wraplength=950,
-            text_color=("gray25", "gray75"), font=("Segoe UI", 13))
+            text_color=("gray25", "gray75"), font=theme.ui_font(13))
         self.note_label.grid(row=1, column=0, sticky="ew", padx=4, pady=(0, 10))
 
         self.table = ttk.Treeview(self, style="AE.Treeview", show="headings",

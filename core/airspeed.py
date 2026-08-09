@@ -15,13 +15,13 @@ Vzorce (izentropicke, plati pro M <= 1):
   CAS = a0*sqrt( 2/(gamma-1) * [(q_c/p0 + 1)^((gamma-1)/gamma) - 1] )
 
 Pro M > 1 by bylo nutne pouzit Rayleighovu pitotovu formuli (razova
-vlna pred snimacem) - mimo rozsah teto aplikace, vyhodi ValueError.
+vlna pred snimacem) - mimo rozsah teto aplikace.
 """
 
 import math
 from dataclasses import dataclass
 
-from core.isa import IsaResult, GAMMA, P0, RHO0, T0, R
+from core.isa import IsaResult, AtmosphereError, GAMMA, P0, RHO0, T0, R
 
 A0 = math.sqrt(GAMMA * R * T0)     # rychlost zvuku na hladine more (340.294 m/s)
 
@@ -54,7 +54,7 @@ def speeds(atm: IsaResult, value: float, kind: str) -> SpeedResult:
     kind:  "TAS" | "EAS" | "CAS" | "Mach"
     """
     if value < 0:
-        raise ValueError("Rychlost musi byt nezaporna")
+        raise AtmosphereError("as_err_negative")
     sqrt_sigma = math.sqrt(atm.sigma)
 
     if kind == "TAS":
@@ -67,10 +67,10 @@ def speeds(atm: IsaResult, value: float, kind: str) -> SpeedResult:
         qc = _qc_from_mach(value / A0, P0)   # q_c z definice CAS
         mach = _mach_from_qc(qc, atm.p)
     else:
-        raise ValueError(f"Neznamy typ rychlosti '{kind}'")
+        raise AtmosphereError("as_err_kind", kind=kind)
 
     if mach > 1.0:
-        raise ValueError("M > 1 — mimo platnost (subsonicky pitot)")
+        raise AtmosphereError("as_supersonic")
 
     tas = mach * atm.a
     eas = tas * sqrt_sigma

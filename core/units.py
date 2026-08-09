@@ -105,12 +105,13 @@ OBJEM = _cat("Objem", "Volume", "m³", [
 
 # --- Hmotnost ---------------------------------------------------------------
 HMOTNOST = _cat("Hmotnost", "Mass", "kg", [
-    Unit("kg",   "kilogram",                        "kilogram"),
-    Unit("g",    "gram",                            "gram",              1e-3),
-    Unit("t",    "tuna (metrická)",                 "metric ton (tonne)", 1e3),
-    Unit("lb",   "libra (avoirdupois)",             "pound (avoirdupois)", LB),
-    Unit("oz",   "unce",                            "ounce",             LB / 16),
-    Unit("slug", "slug",                            "slug",              SLUG),
+    Unit("kg",     "kilogram",                        "kilogram"),
+    Unit("g",      "gram",                            "gram",              1e-3),
+    Unit("t",      "tuna (metrická)",                 "metric ton (tonne)", 1e3),
+    Unit("lb",     "libra (avoirdupois)",             "pound (avoirdupois)", LB),
+    Unit("oz",     "unce",                            "ounce",             LB / 16),
+    Unit("slug",   "slug",                            "slug",              SLUG),
+    Unit("slinch", "slinch (lbf·s²/in)",              "slinch (lbf·s²/in)", LBF / IN),
 ])
 
 # --- Sila -------------------------------------------------------------------
@@ -296,7 +297,7 @@ UHLOVA_RYCHLOST = _cat("Úhlová rychlost", "Angular Velocity", "rad/s", [
     Unit("rad/s", "radián za sekundu",              "radian per second"),
     Unit("°/s",   "stupeň za sekundu",              "degree per second",   math.pi / 180),
     Unit("rpm",   "otáčky za minutu",               "revolutions per minute", 2 * math.pi / 60),
-    Unit("Hz",    "otáčky za sekundu",              "revolutions per second", 2 * math.pi),
+    Unit("rps",   "otáčky za sekundu",              "revolutions per second", 2 * math.pi),
 ])
 
 # --- Viskozita dynamicka ----------------------------------------------------

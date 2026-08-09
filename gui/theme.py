@@ -1,6 +1,8 @@
 """Barevne palety pro nativni Tk widgety (Listbox, Treeview) sladene
-s CustomTkinter temateme "blue" - vcetne prepinani tmavy/svetly rezim."""
+s CustomTkinter temateme "blue" - vcetne prepinani tmavy/svetly rezim.
+"""
 
+import sys
 from tkinter import ttk
 
 import customtkinter as ctk
@@ -24,6 +26,16 @@ PALETTES = {
     },
 }
 
+# Preferovana UI fontova rodina (Windows: Segoe UI; jinde bezpatkove fallbacky)
+_UI_FAMILY = "Segoe UI" if sys.platform == "win32" else "DejaVu Sans"
+
+
+def ui_font(size: int = 12, weight: str | None = None):
+    """Tk/CTk font tuple s platformne vhodnou rodinou."""
+    if weight:
+        return (_UI_FAMILY, size, weight)
+    return (_UI_FAMILY, size)
+
 
 def palette() -> dict:
     mode = "dark" if ctk.get_appearance_mode() == "Dark" else "light"
@@ -37,10 +49,10 @@ def apply_treeview_style(root):
     style.theme_use("clam")
     style.configure("AE.Treeview", background=p["bg"], fieldbackground=p["bg"],
                     foreground=p["fg"], rowheight=30, borderwidth=0,
-                    font=("Segoe UI", 12))
+                    font=ui_font(12))
     style.configure("AE.Treeview.Heading", background=p["bg_head"],
                     foreground=p["fg"], borderwidth=0,
-                    font=("Segoe UI", 11, "bold"))
+                    font=ui_font(11, "bold"))
     style.map("AE.Treeview.Heading", background=[("active", p["bg_head"])])
     style.map("AE.Treeview",
               background=[("selected", p["accent"])],
@@ -51,7 +63,7 @@ def style_listbox(lb):
     """Prebarvi tk.Listbox podle aktualniho rezimu."""
     p = palette()
     lb.configure(bg=p["bg"], fg=p["fg"], selectbackground=p["accent"],
-                 selectforeground="white")
+                 selectforeground="white", font=ui_font(12))
 
 
 def zebra(tree):

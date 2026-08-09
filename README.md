@@ -78,21 +78,30 @@ Any table (converter, solver systems, ISA, airspeed, materials) can be copied to
 
 ## Installation
 
-**Requirements:** Python 3.11+, Windows
+**Requirements:** Python 3.11+, Windows (primary); Linux/macOS may work for development.
 
 ```bash
-pip install customtkinter
+pip install -r requirements.txt
 python main.py
 ```
+
+User settings and custom materials are stored next to the sources in development, or in `%APPDATA%\AE_UNITS` for frozen builds. Place an empty file named `portable` next to the `.exe` to keep data beside the executable instead.
 
 ### Standalone executable (no Python required)
 Pre-built `.exe` releases are available on the [Releases](../../releases) page.
 
-To build yourself:
+To build yourself (PyInstaller):
 ```bash
-pip install pyinstaller pillow
-python -m PyInstaller --onefile --noconsole --icon=icon.ico --add-data="icon.ico;." main.py
+pip install -r requirements-build.txt
+BUILD_EXE.bat
 ```
+Or equivalently:
+```bash
+python -m PyInstaller --noconfirm main.spec
+```
+(`main.spec` collects CustomTkinter assets and produces `dist\AE_UNITS.exe`.)
+
+Nuitka alternative: `BUILD_EXE_NUIT.bat`
 
 ---
 
@@ -101,17 +110,21 @@ python -m PyInstaller --onefile --noconsole --icon=icon.ico --add-data="icon.ico
 ```
 AE_UNITS/
 ├── main.py
+├── requirements.txt
+├── requirements-build.txt
+├── main.spec              # PyInstaller (collects CustomTkinter)
 ├── core/
 │   ├── units.py           # unit definitions and conversion engine
 │   ├── isa.py             # ISA 1976 model + pressure/density altitude inversion
 │   ├── airspeed.py        # CAS/EAS/TAS/Mach compressible conversions
 │   ├── formatting.py      # global number format state
 │   ├── i18n.py            # localization engine (CS / EN)
+│   ├── paths.py           # resource / writable dirs (dev, PyInstaller, Nuitka)
 │   ├── settings.py        # persistent user settings (settings.json)
 │   └── user_materials.py  # custom material persistence
 ├── data/
 │   ├── solver_systems.py  # FEM/CFD unit system tables
-│   └── materials.py       # built-in material database
+│   └── materials.py       # built-in material database (CS + EN)
 ├── lang/
 │   ├── cs.py              # Czech UI strings
 │   └── en.py              # English UI strings + quantity map
@@ -128,10 +141,12 @@ AE_UNITS/
 ├── docs/
 │   └── screenshot.png
 └── tests/
-    ├── test_units.py      # 36 reference checks + roundtrip all units
-    ├── test_isa.py        # validated against US 1976 tables
-    ├── test_airspeed.py   # incl. M 0.80 / FL350 reference point
-    └── test_materials.py  # database sanity checks
+    ├── test_units.py
+    ├── test_isa.py
+    ├── test_airspeed.py
+    ├── test_materials.py
+    ├── test_user_materials.py
+    └── test_settings.py
 ```
 
 ---
@@ -159,6 +174,7 @@ The test suite checks 36 known values from aerospace literature (Niu, Bruhn), ru
 - [x] Unit search across categories
 - [x] ISA atmosphere profile plot (σ/δ/θ, native canvas)
 - [x] More materials (29 entries: further Al alloys, Ti, steels, composites, cores)
+- [x] v0.42 — ISA endpoint/ΔISA fixes, EN materials & OpenFOAM labels, portable/APPDATA data dir, packaging fixes
 
 ---
 

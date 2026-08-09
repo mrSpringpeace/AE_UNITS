@@ -31,7 +31,7 @@ class ConverterTab(ctk.CTkFrame):
         self.search_entry.bind("<KeyRelease>", lambda e: self._on_search())
 
         self.cat_list = tk.Listbox(
-            left, width=26, font=("Segoe UI", 12),
+            left, width=26, font=theme.ui_font(12),
             activestyle="none", borderwidth=0, highlightthickness=0,
             exportselection=False)
         self.cat_list.grid(row=1, column=0, sticky="nsw")

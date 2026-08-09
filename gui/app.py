@@ -14,7 +14,7 @@ from gui.tab_airspeed import AirspeedTab
 from gui.tab_materials import MaterialsTab
 
 APP_TITLE = "AE_UNITS"
-VERSION = "0.41"
+VERSION = "0.42"
 
 
 class App(ctk.CTk):
@@ -23,8 +23,8 @@ class App(ctk.CTk):
 
         self._s = cfg.load()
         i18n.set_lang(self._s.get("lang", "cs"))
-        ctk.set_appearance_mode("dark" if self._s["theme"] == i18n.t("theme_dark")
-                                or self._s["theme"] == "Tmavý" else "light")
+        is_dark = self._s.get("theme", "dark") == "dark"
+        ctk.set_appearance_mode("dark" if is_dark else "light")
         ctk.set_default_color_theme("blue")
         formatting.set_format(mode=self._s["fmt_mode"],
                               digits=self._s["fmt_digits"])
@@ -45,7 +45,7 @@ class App(ctk.CTk):
         bar.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(bar, text="AE_UNITS",
-                     font=("Segoe UI", 16, "bold")).grid(
+                     font=theme.ui_font(16, "bold")).grid(
             row=0, column=0, sticky="w", padx=12)
 
         self.btn_copy_table = ctk.CTkButton(
@@ -70,7 +70,7 @@ class App(ctk.CTk):
         self.digits_menu.grid(row=0, column=6, padx=4, pady=8)
 
         self.theme_switch = ctk.CTkSegmentedButton(
-            bar, values=["Tmavý", "Světlý"], command=self._on_theme_change)
+            bar, values=["dark", "light"], command=self._on_theme_change)
         self.theme_switch.grid(row=0, column=7, padx=(24, 8), pady=8)
 
         self.lang_switch = ctk.CTkSegmentedButton(
@@ -84,20 +84,24 @@ class App(ctk.CTk):
 
         self._tab_names = ["tab_converter", "tab_solvers", "tab_isa",
                            "tab_airspeed", "tab_materials"]
+        # vlastni mapa klic -> aktualni titulek (bez private CTK API)
+        self._tab_title = {}
         for key in self._tab_names:
-            t = self.tabs.add(i18n.t(key))
+            title = i18n.t(key)
+            self._tab_title[key] = title
+            t = self.tabs.add(title)
             t.grid_columnconfigure(0, weight=1)
             t.grid_rowconfigure(0, weight=1)
 
-        self.tab_converter = ConverterTab(self.tabs.tab(i18n.t("tab_converter")))
+        self.tab_converter = ConverterTab(self.tabs.tab(self._tab_title["tab_converter"]))
         self.tab_converter.grid(row=0, column=0, sticky="nsew")
-        self.tab_solvers = SolversTab(self.tabs.tab(i18n.t("tab_solvers")))
+        self.tab_solvers = SolversTab(self.tabs.tab(self._tab_title["tab_solvers"]))
         self.tab_solvers.grid(row=0, column=0, sticky="nsew")
-        self.tab_isa = IsaTab(self.tabs.tab(i18n.t("tab_isa")))
+        self.tab_isa = IsaTab(self.tabs.tab(self._tab_title["tab_isa"]))
         self.tab_isa.grid(row=0, column=0, sticky="nsew")
-        self.tab_airspeed = AirspeedTab(self.tabs.tab(i18n.t("tab_airspeed")))
+        self.tab_airspeed = AirspeedTab(self.tabs.tab(self._tab_title["tab_airspeed"]))
         self.tab_airspeed.grid(row=0, column=0, sticky="nsew")
-        self.tab_materials = MaterialsTab(self.tabs.tab(i18n.t("tab_materials")))
+        self.tab_materials = MaterialsTab(self.tabs.tab(self._tab_title["tab_materials"]))
         self.tab_materials.grid(row=0, column=0, sticky="nsew")
 
         self._theme_aware  = [self.tab_converter, self.tab_solvers,
@@ -119,28 +123,23 @@ class App(ctk.CTk):
 
     # ------------------------------------------------------------------
     def _refresh_toolbar_labels(self):
-        lang = i18n.get_lang()
         self.fmt_label.configure(text=i18n.t("fmt_label"))
         self.digits_label.configure(text=i18n.t("digits_label"))
         self.btn_copy_table.configure(text=i18n.t("btn_copy_table"))
         self.btn_csv.configure(text=i18n.t("btn_export_csv"))
-        # theme prepinac - hodnoty jsou lokalizovane labely
         dark_lbl  = i18n.t("theme_dark")
         light_lbl = i18n.t("theme_light")
         self.theme_switch.configure(values=[dark_lbl, light_lbl])
-        saved_theme = self._s["theme"]
-        # normalizace: "Tmavý"/"Dark" -> dark_lbl, "Světlý"/"Light" -> light_lbl
-        is_dark = saved_theme in ("Tmavý", "Dark", dark_lbl)
+        is_dark = self._s.get("theme", "dark") == "dark"
         self.theme_switch.set(dark_lbl if is_dark else light_lbl)
-        # format menu
         labels = [i18n.t(f"fmt_{k}") for k in formatting.MODES]
         self.fmt_menu.configure(values=labels)
         self.fmt_menu.set(i18n.t(f"fmt_{self._s['fmt_mode']}"))
 
     def _current_tab_key(self) -> str:
         current = self.tabs.get()
-        for key in self._tab_names:
-            if i18n.t(key) == current:
+        for key, title in self._tab_title.items():
+            if title == current:
                 return key
         return self._tab_names[0]
 
@@ -166,8 +165,9 @@ class App(ctk.CTk):
     def _save_settings(self):
         try:
             cfg.save(self._s)
-        except OSError:
-            pass
+        except OSError as e:
+            messagebox.showerror(
+                "AE_UNITS", i18n.t("settings_save_error", err=e))
 
     def _on_format_change(self, _value=None):
         label = self.fmt_menu.get()
@@ -183,7 +183,7 @@ class App(ctk.CTk):
     def _on_theme_change(self, value):
         is_dark = value == i18n.t("theme_dark")
         ctk.set_appearance_mode("dark" if is_dark else "light")
-        self._s["theme"] = "Tmavý" if is_dark else "Světlý"
+        self._s["theme"] = "dark" if is_dark else "light"
         self._save_settings()
         theme.apply_treeview_style(self)
         for tab in self._theme_aware:
@@ -194,12 +194,15 @@ class App(ctk.CTk):
         i18n.set_lang(lang)
         self._s["lang"] = lang
         self._save_settings()
-        # prejmenovani tabu (CTkTabview nema verejne rename API)
         for key in self._tab_names:
-            try:
-                self.tabs.rename(self._tab_key_to_current(key), i18n.t(key))
-            except Exception:
-                pass
+            old = self._tab_title[key]
+            new = i18n.t(key)
+            if old != new:
+                try:
+                    self.tabs.rename(old, new)
+                except Exception:
+                    pass
+                self._tab_title[key] = new
         self._refresh_toolbar_labels()
         theme.apply_treeview_style(self)
         for tab in self._lang_aware:
@@ -207,23 +210,13 @@ class App(ctk.CTk):
         for tab in self._recalcable:
             tab.recalc()
 
-    def _tab_key_to_current(self, key: str) -> str:
-        """Vrati aktualni (pred prekladem) nazev tabu — zjisti ho z existujicich tabu."""
-        for name in self.tabs._tab_dict:  # type: ignore[attr-defined]
-            if name == i18n.t(key):
-                return name
-        # fallback: zkus oba jazyky
-        from lang import cs, en
-        for d in (cs.STRINGS, en.STRINGS):
-            candidate = d.get(key, "")
-            if candidate in self.tabs._tab_dict:  # type: ignore[attr-defined]
-                return candidate
-        return i18n.t(key)
-
     def _set_icon(self):
         ico = paths.resource_dir() / "icon.ico"
         if ico.exists():
-            self.iconbitmap(str(ico))
+            try:
+                self.iconbitmap(str(ico))
+            except Exception:
+                pass
 
     def _on_close(self):
         self._save_settings()

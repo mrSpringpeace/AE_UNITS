@@ -33,3 +33,9 @@ jobs:
 
       - name: Run material database sanity checks
         run: python tests/test_materials.py
+
+      - name: Run user materials persistence tests
+        run: python tests/test_user_materials.py
+
+      - name: Run settings / packaging sanity tests
+        run: python tests/test_settings.py

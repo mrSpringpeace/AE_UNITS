@@ -25,17 +25,23 @@ class MaterialDialog(ctk.CTkToplevel):
         self.result = None
 
         self._entries = {}
+        self._lbl_keys = {}
         for i, (lbl_key, key, typ, optional) in enumerate(_FIELDS):
             ctk.CTkLabel(self, text=i18n.t(lbl_key), anchor="e", width=140).grid(
                 row=i, column=0, padx=(16, 8), pady=6, sticky="e")
             e = ctk.CTkEntry(self, width=240)
             e.grid(row=i, column=1, padx=(0, 16), pady=6)
             self._entries[key] = (e, typ, optional)
+            self._lbl_keys[key] = lbl_key
 
         if prefill:
-            vals = {"name": prefill[0], "rho": prefill[1], "E": prefill[2],
-                    "nu": prefill[3], "ftu": prefill[4], "fty": prefill[5],
-                    "note": prefill[6]}
+            # prefill: (id, name, rho, E, nu, ftu, fty, note) nebo legacy 7-tice
+            if len(prefill) == 8:
+                _, name, rho, E, nu, ftu, fty, note = prefill
+            else:
+                name, rho, E, nu, ftu, fty, note = prefill
+            vals = {"name": name, "rho": rho, "E": E,
+                    "nu": nu, "ftu": ftu, "fty": fty, "note": note}
             for key, (e, typ, _) in self._entries.items():
                 v = vals.get(key)
                 if v is not None:
@@ -65,21 +71,27 @@ class MaterialDialog(ctk.CTkToplevel):
         y = master.winfo_y() + (master.winfo_height() - self.winfo_height()) // 2
         self.geometry(f"+{x}+{y}")
 
+    def _field_label(self, key: str) -> str:
+        return i18n.t(self._lbl_keys[key])
+
     def _submit(self):
         values = {}
         for key, (e, typ, optional) in self._entries.items():
             raw = e.get().strip().replace(",", ".")
             if not raw:
                 if not optional:
-                    self._err.configure(text=i18n.t("dlg_err_required", key=key))
+                    self._err.configure(
+                        text=i18n.t("dlg_err_required", key=self._field_label(key)))
                     return
                 values[key] = None
             else:
                 try:
                     values[key] = typ(raw)
                 except ValueError:
-                    self._err.configure(text=i18n.t("dlg_err_invalid", key=key))
+                    self._err.configure(
+                        text=i18n.t("dlg_err_invalid", key=self._field_label(key)))
                     return
+        # vysledek bez id — volajici prida/zachova id
         self.result = (values["name"], values["rho"], values["E"], values["nu"],
                        values["ftu"], values["fty"], values["note"] or "")
         self.destroy()

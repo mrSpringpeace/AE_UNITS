@@ -21,7 +21,7 @@ python -m nuitka ^
   --windows-icon-from-ico=icon.ico ^
   --company-name=AE_UNITS ^
   --product-name=AE_UNITS ^
-  --product-version=0.41 ^
+  --product-version=0.42 ^
   --output-dir=build ^
   --output-filename=AE_UNITS.exe ^
   --assume-yes-for-downloads ^

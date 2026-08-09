@@ -60,7 +60,7 @@ class IsaTab(ctk.CTkFrame):
         inp = ctk.CTkFrame(self)
         inp.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 10))
 
-        self.lbl_alt = ctk.CTkLabel(inp, font=("Segoe UI", 14))
+        self.lbl_alt = ctk.CTkLabel(inp, font=theme.ui_font(14))
         self.lbl_alt.grid(row=0, column=0, padx=(12, 6), pady=12)
         self.alt_entry = ctk.CTkEntry(inp, width=140, font=("Consolas", 18), justify="right")
         self.alt_entry.grid(row=0, column=1, padx=6, pady=12)
@@ -75,7 +75,7 @@ class IsaTab(ctk.CTkFrame):
         self.alt_type = ctk.CTkSegmentedButton(inp, command=self._on_alt_type)
         self.alt_type.grid(row=0, column=3, padx=(12, 6), pady=12)
 
-        self.lbl_dt = ctk.CTkLabel(inp, font=("Segoe UI", 14))
+        self.lbl_dt = ctk.CTkLabel(inp, font=theme.ui_font(14))
         self.lbl_dt.grid(row=0, column=4, padx=(24, 6), pady=12)
         self.dt_entry = ctk.CTkEntry(inp, width=80, font=("Consolas", 18), justify="right")
         self.dt_entry.grid(row=0, column=5, padx=6, pady=12)
@@ -166,13 +166,13 @@ class IsaTab(ctk.CTkFrame):
             x1, _ = xy(x_max, alt)
             c.create_line(x0, y, x1, y, fill=p["bg_head"])
             c.create_text(x0 - 5, y, text=f"{alt // 1000}", anchor="e",
-                          fill=p["fg_dim"], font=("Segoe UI", 9))
+                          fill=p["fg_dim"], font=theme.ui_font(9))
         for v in (0.0, 0.25, 0.5, 0.75, 1.0):
             x, y0 = xy(v, 0)
             _, y1 = xy(v, h_top)
             c.create_line(x, y0, x, y1, fill=p["bg_head"])
             c.create_text(x, y0 + 5, text=f"{v:g}", anchor="n",
-                          fill=p["fg_dim"], font=("Segoe UI", 9))
+                          fill=p["fg_dim"], font=theme.ui_font(9))
 
         # krivky standardni atmosfery
         alts = list(range(0, int(min(h_top, H_MAX)), 1000))
@@ -189,12 +189,12 @@ class IsaTab(ctk.CTkFrame):
 
         # titulek + legenda
         c.create_text(left, 8, text=i18n.t("isa_profile"), anchor="nw",
-                      fill=p["fg"], font=("Segoe UI", 10, "bold"))
+                      fill=p["fg"], font=theme.ui_font(10, "bold"))
         lx = left
         for sym, key in (("σ", "sigma"), ("δ", "delta"), ("θ", "theta")):
             t_id = c.create_text(lx, hp - 6, text=sym, anchor="sw",
                                  fill=_PROFILE_COLORS[key],
-                                 font=("Segoe UI", 11, "bold"))
+                                 font=theme.ui_font(11, "bold"))
             lx = c.bbox(t_id)[2] + 12
 
         # znacka aktualni vysky
@@ -203,7 +203,7 @@ class IsaTab(ctk.CTkFrame):
             x1, _ = xy(x_max, self._cur_h)
             c.create_line(x0, y, x1, y, fill=p["fg"], dash=(4, 3))
             c.create_text(x1, y - 3, text=f"{self._cur_h / 1000:.2f} km",
-                          anchor="se", fill=p["fg"], font=("Segoe UI", 9))
+                          anchor="se", fill=p["fg"], font=theme.ui_font(9))
 
     def _copy_row(self, event):
         iid = self.table.identify_row(event.y)
@@ -235,7 +235,7 @@ class IsaTab(ctk.CTkFrame):
         try:
             r = isa(x, dT=dt) if self._alt_mode == "geom" else isa_h(x, dT=dt)
         except ValueError as e:
-            self._clear(str(e))
+            self._clear(i18n.err(e))
             return
         try:
             h_rho = density_altitude(r.rho)

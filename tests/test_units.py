@@ -27,6 +27,7 @@ CHECKS = [
     (SILA, 1, "kip", "kN", 4.4482216152605, 1e-12),
     (HMOTNOST, 1, "slug", "kg", 14.5939, 1e-5),
     (HMOTNOST, 1, "lb", "kg", 0.45359237, 0),
+    (HMOTNOST, 1, "slinch", "kg", 175.1268, 1e-4),
     (HUSTOTA, 1, "lb/in³", "kg/m³", 27679.9, 1e-5),    # hlinik 0.101 lb/in3 = 2796 kg/m3
     (HUSTOTA, 0.101, "lb/in³", "g/cm³", 2.79567, 1e-4),
     (HUSTOTA, 1, "slug/ft³", "kg/m³", 515.3788, 1e-6),

@@ -25,6 +25,14 @@ def t(key: str, **kwargs) -> str:
     return s.format(**kwargs) if kwargs else s
 
 
+def err(exc: BaseException) -> str:
+    """Lokalizovana chybova hlaska z AtmosphereError (nebo str(exc))."""
+    key = getattr(exc, "key", None)
+    if key:
+        return t(key, **getattr(exc, "kwargs", {}))
+    return str(exc)
+
+
 def uname(unit) -> str:
     """Lokalizovany nazev jednotky."""
     if _lang == "en" and getattr(unit, "name_en", ""):

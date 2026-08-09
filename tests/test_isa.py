@@ -87,6 +87,32 @@ def main():
         print(f"FAIL pressure_altitude(101325) = {pressure_altitude(101325.0)}")
         failed += 1
 
+    # geometricke konce modelu (ofic. US 1976: -2 km az 86 km geometric)
+    for z in (-2000.0, 86000.0):
+        try:
+            isa(z)
+        except Exception as e:
+            print(f"FAIL isa({z}): {e}")
+            failed += 1
+
+    # mimo rozsah
+    try:
+        isa(90000)
+        print("FAIL: isa(90000) nevyhodilo chybu")
+        failed += 1
+    except ValueError:
+        pass
+
+    # ekstremni Delta ISA -> T <= 0
+    try:
+        isa(0, dT=-300)
+        print("FAIL: isa(0, dT=-300) nevyhodilo chybu")
+        failed += 1
+    except ValueError as e:
+        if getattr(e, "key", None) != "isa_err_temp":
+            print(f"FAIL dT key: {getattr(e, 'key', e)}")
+            failed += 1
+
     print("VSE OK (ISA)" if failed == 0 else f"{failed} CHYB (ISA)")
     return failed
 
