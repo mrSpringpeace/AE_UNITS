@@ -9,6 +9,7 @@ Desktop utility for aerospace engineers and designers. Replaces ad-hoc Google se
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![Discord](https://img.shields.io/badge/Discord-join%20server-5865F2?logo=discord&logoColor=white)](https://discord.gg/qHYEwrkfWm)
 
 ![AE_UNITS screenshot](docs/screenshot.png)
 
@@ -175,6 +176,12 @@ The test suite checks 36 known values from aerospace literature (Niu, Bruhn), ru
 - [x] ISA atmosphere profile plot (σ/δ/θ, native canvas)
 - [x] More materials (29 entries: further Al alloys, Ti, steels, composites, cores)
 - [x] v0.42 — ISA endpoint/ΔISA fixes, EN materials & OpenFOAM labels, portable/APPDATA data dir, packaging fixes
+
+---
+
+## Community
+
+Questions, feedback, or feature ideas? Join the [AE_UNITS Discord server](https://discord.gg/qHYEwrkfWm).
 
 ---
 
